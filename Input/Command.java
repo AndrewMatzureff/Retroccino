@@ -11,6 +11,7 @@ import java.util.LinkedList;
  */
 public abstract class Command//And so we meet again Larru >:}
 {   
+	//NOOOOOOO
     public static final InputDevice[] DEVICES = new InputDevice[8];//Registered Input Devices
     public static final LinkedList<Command> COMMANDS = new LinkedList<Command>();//Added Commands
     //ff ff ff ff ff ff ff ff
