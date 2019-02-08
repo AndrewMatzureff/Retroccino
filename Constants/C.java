@@ -28,6 +28,8 @@ public class C//NOTE: 2/6/19 - no. cheese this shit and move these constants to 
     public static final int ROTATE_MASK = 4;
     public static final int REFLECTION_MASK = 5;
     
+    //Added  a test comment
+    
     public static final int
     FLIP_HORZ = MIRROR_X_MASK,
     FLIP_VERT = MIRROR_Y_MASK,
