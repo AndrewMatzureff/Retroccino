@@ -1,8 +1,7 @@
 
 package Graphics;
 
-import java.awt.Rectangle; 
-import Constants.C;
+import java.awt.Rectangle;
 /**
  * Write a description of class Screen here.
  * 
@@ -11,6 +10,51 @@ import Constants.C;
  */
 public class Screen
 {
+    
+    //Clipping
+    public static final int IN = 0;
+    public static final int OUT_ALL = 15;
+    public static final int OUT_LEFT = 1;
+    public static final int OUT_RIGHT = 2;
+    public static final int OUT_UP = 4;
+    public static final int OUT_DOWN = 8;
+    public static final int OUT_X = OUT_LEFT | OUT_RIGHT;
+    public static final int OUT_Y = OUT_UP | OUT_DOWN;
+    public static final int OUT_UP_RIGHT = OUT_UP | OUT_RIGHT;
+    public static final int OUT_UP_LEFT = OUT_UP | OUT_LEFT;
+    public static final int OUT_DOWN_RIGHT = OUT_DOWN | OUT_RIGHT;
+    public static final int OUT_DOWN_LEFT = OUT_DOWN | OUT_LEFT;
+    public static final int OUT_Y_RIGHT = OUT_Y | OUT_RIGHT;
+    public static final int OUT_Y_LEFT = OUT_Y | OUT_LEFT;
+    public static final int OUT_X_UP = OUT_X | OUT_UP;
+    public static final int OUT_X_DOWN = OUT_X | OUT_DOWN;
+    public static final int X_SHIFT = 31;
+    public static final int Y_SHIFT = 29;
+    public static final int WIDTH_SHIFT = 30;
+    public static final int HEIGHT_SHIFT = 28;
+    public static final int SIGN_INT = 31;
+    
+    //Transform
+    public static final int MIRROR_XY_MASK = 3;
+    public static final int MIRROR_MASK = 3;
+    public static final int ROTATE_MASK = 4;
+    public static final int REFLECTION_MASK = 5;
+    //
+    public static final int MIRROR_Y = 1;
+    public static final int MIRROR_X = 2;
+    public static final int MIRROR_XY = 3;
+    
+    //Clockwise & Anti-Clockwise
+    public static final int
+    CW_0 = 0,
+    CW_90 = 4,
+    CW_180 = 3,
+    CW_270 = 7,
+    AC_0 = 1,
+    AC_90 = 5,
+    AC_180 = 2,
+    AC_270 = 6;
+    
     public static int TINT_OP;
     public int width, height;
     public int[] pixels;
@@ -40,7 +84,7 @@ public class Screen
         //for(int i = 0; i < pixels.length; i++)
         //pixels[i] = 0xffccaaff + i * width / (c + 1);
         //pixels[i] = 0xffccaaff + (int)(i * c * 0.01);
-        //drawSprite(clear, -300, -400, C.MIRROR_X);
+        //drawSprite(clear, -300, -400, MIRROR_Y);
     }
     public void drawRect(int x, int y, int w, int h, float s, int color)
     {
@@ -65,25 +109,25 @@ public class Screen
         |
         (((height - 1) - (y + h - 1)) >>> 28) & 8;
         
-        if((position & C.OUT_LEFT) != 0)
+        if((position & OUT_LEFT) != 0)
         {
             w += x;//w must be offset to account for x amount offscreen
             if(w < 1)
                 w = 1;
             x = 0;
         }
-        else if((position & C.OUT_RIGHT) != 0)
+        else if((position & OUT_RIGHT) != 0)
         {
             w = width - x;
         }
-        if((position & C.OUT_UP) != 0)
+        if((position & OUT_UP) != 0)
         {
             h += y;
             if(h < 1)
                 h = 1;
             y = 0;
         }
-        else if((position & C.OUT_DOWN) != 0)
+        else if((position & OUT_DOWN) != 0)
         {
             h = height - y;
         }
@@ -122,25 +166,25 @@ public class Screen
         |
         (((height - 1) - (y + h - 1)) >>> 28) & 8;
         
-        if((position & C.OUT_LEFT) != 0)
+        if((position & OUT_LEFT) != 0)
         {
             w += x;//w must be offset to account for x amount offscreen
             if(w < 1)
                 w = 1;
             x = 0;
         }
-        else if((position & C.OUT_RIGHT) != 0)
+        else if((position & OUT_RIGHT) != 0)
         {
             w = width - x;
         }
-        if((position & C.OUT_UP) != 0)
+        if((position & OUT_UP) != 0)
         {
             h += y;
             if(h < 1)
                 h = 1;
             y = 0;
         }
-        else if((position & C.OUT_DOWN) != 0)
+        else if((position & OUT_DOWN) != 0)
         {
             h = height - y;
         }
@@ -214,19 +258,19 @@ public class Screen
             spriteh -= (y + sprite.tilesize) - height;
         }
         
-        if((transform & C.ROTATE_MASK) != 0)
+        if((transform & ROTATE_MASK) != 0)
         {//NOTE: 90 degree rotation to the right must also include a horizontal mirror transform for the rotation to be correct.
-            //Because of this implicit reflection the MIRROR_X flag must be inverted while the MIRROR_Y remains unchanged.
+            //Because of this implicit reflection the MIRROR_Y flag must be inverted while the MIRROR_X remains unchanged.
             //100    101    110    111
             //101    101    101    101
             //001    000    011    010
-            transform ^= C.REFLECTION_MASK;
+            transform ^= REFLECTION_MASK;
             spritePixels = sprite.transform;
         }
         //*
-        switch(transform & C.MIRROR_MASK)//these mirror transforms were Hell in their own right to figure out, but they're so worth the work
+        switch(transform & MIRROR_MASK)//these mirror transforms were Hell in their own right to figure out, but they're so worth the work
         {
-            case C.MIRROR_X:
+            case MIRROR_Y:
                 for(int r = 0; r < spriteh; r++)//fixed by ADDING sprite position in offscreen condition since it's a negative offset
                 {
                     int spriter = (r + spritey) * sprite.tilesize;
@@ -239,7 +283,7 @@ public class Screen
                     }
                 }
                 break;
-            case C.MIRROR_Y:
+            case MIRROR_X:
                 for(int r = 0; r < spriteh; r++)//fixed by ADDING sprite position in offscreen condition since it's a negative offset
                 {
                     //int spriter = (r + spritey) * sprite.tilesize;
@@ -252,7 +296,7 @@ public class Screen
                     }
                 }
                 break;
-            case C.MIRROR_XY:
+            case MIRROR_XY:
                 for(int r = 0; r < spriteh; r++)//fixed by ADDING sprite position in offscreen condition since it's a negative offset
                 {
                     //int spriter = (r + spritey) * sprite.tilesize;
@@ -274,17 +318,17 @@ public class Screen
                 {
                     int spriter;// = (r + spritey) * sprite.tilesize;
                     int screenr;// = (r + screeny) * width;
-                    switch(transform & C.MIRROR_MASK)
+                    switch(transform & MIRROR_MASK)
                     {
-                        case C.MIRROR_X:
+                        case MIRROR_Y:
                             spriter = (r + spritey) * sprite.tilesize;
                             screenr = (r + screeny) * width;
                             break;
-                        case C.MIRROR_Y:
+                        case MIRROR_X:
                             spriter = (sprite.tilesize - 1 - (r + spritey)) * sprite.tilesize;
                             screenr = (r + screeny) * width;
                             break;
-                        case C.MIRROR_XY:
+                        case MIRROR_XY:
                             spriter = (sprite.tilesize - 1 - (r + spritey)) * sprite.tilesize;
                             screenr = (r + screeny) * width;
                             break;
@@ -382,19 +426,19 @@ public class Screen
             spriteh -= (screeny + spriteh) - height;
         }
         
-     if((transform & C.ROTATE_MASK) != 0)
+     if((transform & ROTATE_MASK) != 0)
         {//NOTE: 90 degree rotation to the right must also include a horizontal mirror transform for the rotation to be correct.
-            //Because of this implicit reflection the MIRROR_X flag must be inverted while the MIRROR_Y remains unchanged.
+            //Because of this implicit reflection the MIRROR_Y flag must be inverted while the MIRROR_X remains unchanged.
             //100    101    110    111
             //101    101    101    101
             //001    000    011    010
-            transform ^= C.REFLECTION_MASK;
+            transform ^= REFLECTION_MASK;
             spritePixels = sprite.transform;
         }
         //*
-        switch(transform & C.MIRROR_MASK)//these mirror transforms were Hell in their own right to figure out, but they're so worth the work
+        switch(transform & MIRROR_MASK)//these mirror transforms were Hell in their own right to figure out, but they're so worth the work
         {
-            case C.MIRROR_X:
+            case MIRROR_Y:
                 for(int r = 0; r < spriteh; r++)//fixed by ADDING sprite position in offscreen condition since it's a negative offset
                 {
                     int spriter = (r + spritey) * tilesize;
@@ -407,7 +451,7 @@ public class Screen
                     }
                 }
                 break;
-            case C.MIRROR_Y:
+            case MIRROR_X:
                 for(int r = 0; r < spriteh; r++)//fixed by ADDING sprite position in offscreen condition since it's a negative offset
                 {
                     //int spriter = (r + spritey) * sprite.tilesize;
@@ -420,7 +464,7 @@ public class Screen
                     }
                 }
                 break;
-            case C.MIRROR_XY:
+            case MIRROR_XY:
                 for(int r = 0; r < spriteh; r++)//fixed by ADDING sprite position in offscreen condition since it's a negative offset
                 {
                     //int spriter = (r + spritey) * sprite.tilesize;
@@ -442,17 +486,17 @@ public class Screen
                 {
                     int spriter;// = (r + spritey) * sprite.tilesize;
                     int screenr;// = (r + screeny) * width;
-                    switch(transform & C.MIRROR_MASK)
+                    switch(transform & MIRROR_MASK)
                     {
-                        case C.MIRROR_X:
+                        case MIRROR_Y:
                             spriter = (r + spritey) * sprite.tilesize;
                             screenr = (r + screeny) * width;
                             break;
-                        case C.MIRROR_Y:
+                        case MIRROR_X:
                             spriter = (sprite.tilesize - 1 - (r + spritey)) * sprite.tilesize;
                             screenr = (r + screeny) * width;
                             break;
-                        case C.MIRROR_XY:
+                        case MIRROR_XY:
                             spriter = (sprite.tilesize - 1 - (r + spritey)) * sprite.tilesize;
                             screenr = (r + screeny) * width;
                             break;
@@ -517,10 +561,10 @@ public class Screen
     }
     public void drawSprite(Sprite sprite, int x, int y, int z, int a)
     {
-        int screenx = x & (-x >> C.SIGN_INT);//equivalent to "if(x < 0)x = 0"
-        int screeny = y & (-y >> C.SIGN_INT);
-        int spritex = -(x & (x >> C.SIGN_INT));//equivalent to "if(x < 0)x = -x else x = 0"
-        int spritey = -(y & (y >> C.SIGN_INT));
+        int screenx = x & (-x >> SIGN_INT);//equivalent to "if(x < 0)x = 0"
+        int screeny = y & (-y >> SIGN_INT);
+        int spritex = -(x & (x >> SIGN_INT));//equivalent to "if(x < 0)x = -x else x = 0"
+        int spritey = -(y & (y >> SIGN_INT));
         int spritew = x + sprite.tilesize - 1;
         int spriteh = y + sprite.tilesize - 1;
         spritew = spritew > width? sprite.tilesize - (spritew - width): sprite.tilesize;

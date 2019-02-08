@@ -1,4 +1,4 @@
-package Unit_Tests;
+package UnitTests;
 /**
  * Write a description of class c here.
  * 

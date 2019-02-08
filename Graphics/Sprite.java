@@ -1,6 +1,4 @@
 package Graphics;
-
-import Constants.C;
 /**
  * Write a description of class Sprite here.
  * 
@@ -9,6 +7,7 @@ import Constants.C;
  */
 public class Sprite
 {
+    public static final int UNDEFINED = 0, HORIZONTAL = 1, VERTICAL = 2;
     int[] pixels;
     int[] transform;
     public int tilesize;
@@ -21,14 +20,14 @@ public class Sprite
         System.out.println("Scansize: " + scansize + ", Tilesize: " + tilesize);
         xsprites = scansize / tilesize;
         ysprites = sheet.pixels.length / scansize / tilesize;
-        format = i < xsprites * ysprites? sheet.format: C.UNDEFINED;
+        format = i < xsprites * ysprites? sheet.format: UNDEFINED;
         switch(format)
         {
-            case C.HORIZONTAL:
+            case HORIZONTAL:
                 x = i % xsprites * tilesize;//bilinear pixel component, top-left
                 y = i / xsprites * tilesize;//bilinear pixel component, top-left
                 break;
-            case C.VERTICAL:
+            case VERTICAL:
                 x = i / xsprites * tilesize;//bilinear pixel component, top-left
                 y = i % xsprites * tilesize;//bilinear pixel component, top-left
                 break;

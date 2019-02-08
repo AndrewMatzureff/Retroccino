@@ -1,6 +1,5 @@
 package Graphics;
 
-import Constants.C;
 import java.util.List;
 import java.util.Iterator;
 import IO.Text;
@@ -14,6 +13,9 @@ import java.util.ArrayList;
  */
 public class Font//Needs work...
 {
+    public static final int HORIZONTAL = 0, VERTICAL = 1;
+    public static final char F = 'f', R = 'r', C = 'c', T = 't', O = 'o', H = 'h', V = 'v';
+    public static final int LOWER_BOUND = 96, UPPER_BOUND = 123, RANGE = 32;
     public Sprite[] glyphs;
     public final char offset;
     public int point;
@@ -37,7 +39,7 @@ public class Font//Needs work...
     }
     private static char decase(int letter)//lol does this even work? I barely remember writing this...
     {
-        return (char)(C.LOWER_BOUND + (letter % C.UPPER_BOUND) % C.RANGE);
+        return (char)(LOWER_BOUND + (letter % UPPER_BOUND) % RANGE);
     }
     public static Font read(String formatPath)
     {
@@ -51,24 +53,24 @@ public class Font//Needs work...
         {
             switch(decase((int)line.charAt(0)))
             {
-                case C.F:
+                case F:
                     filename = line.substring(1);
                     break;
-                case C.O:
+                case O:
                     switch(decase((int)line.charAt(1)))
                     {
-                        case C.H:
-                            orientation = C.HORIZONTAL;
+                        case H:
+                            orientation = HORIZONTAL;
                             break;
-                        case C.V:
-                            orientation = C.VERTICAL;
+                        case V:
+                            orientation = VERTICAL;
                             break;
                         default:
                             Log.append("Invalid SpriteSheet Orientation on Line " + i + " in " + filename + ".");
                             break;
                     }
                     break;
-                case C.R:
+                case R:
                     offset = line.charAt(1);/*//deprecated
                     try
                     {
@@ -77,7 +79,7 @@ public class Font//Needs work...
                     catch(IndexOutOfBoundsException ioobe){continue;}
                     catch(NumberFormatException nfe){continue;}*/
                     break;
-                case C.T:
+                case T:
                     try{
                         tilesize = Integer.parseInt(line.substring(1));
                         //System.out.println("Parsed " + tilesize);

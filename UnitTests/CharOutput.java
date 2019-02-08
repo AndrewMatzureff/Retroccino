@@ -1,4 +1,4 @@
-package Unit_Tests;
+package UnitTests;
 
 
 /**
