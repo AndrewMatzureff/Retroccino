@@ -9,5 +9,5 @@ package Main;
  */
 public interface Game
 {
-    public void update(double delta);
+    public boolean update(double delta);
 }

@@ -10,6 +10,7 @@ import javax.swing.WindowConstants;
 import javax.swing.JButton;
 import Input.Mouse;
 import Input.Keyboard;
+import Graphics.Screen;
 /**
  * Write a description of class Kernel here.
  * 
@@ -26,7 +27,8 @@ public class Kernel extends Canvas implements Runnable
     private boolean running;
     BufferedImage image;
     int[] pixels;
-    //Screen screen;
+    Screen screen;
+    Thread renderer;
     public Kernel(String title){
         //Rolled steel for making boilers...
         super(G_CONFIG);
@@ -47,9 +49,18 @@ public class Kernel extends Canvas implements Runnable
         createBufferStrategy(3);
         running = true;
     }
+    public Mouse getMouse(){
+        return mouse;
+    }
+    public Keyboard getKeyboard(){
+        return keyboard;
+    }
     public void init(int w, int h){
         image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
         pixels = ((DataBufferInt)image.getRaster().getDataBuffer()).getData();
+        screen = Screen.create(pixels, w);
+        if(screen == null)
+            running = false;
     }
     private static GraphicsConfiguration initGraphics(){//NOTE: 2/6/19 - support multi monitor environment
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -62,9 +73,19 @@ public class Kernel extends Canvas implements Runnable
     public void refresh(){
         BufferStrategy bs = this.getBufferStrategy();
         Graphics g = bs.getDrawGraphics();
+        randomRect();
         g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
         g.dispose();
         bs.show();
+    }
+    public void randomRect(){
+        int x = (int)(Math.random() * screen.getWidth());
+        int y = (int)(Math.random() * screen.getHeight());
+        int w = (int)(Math.random() * screen.getWidth() * 0.1);
+        int h = (int)(Math.random() * screen.getHeight() * 0.1);
+        try{
+        screen.drawRect(x - w / 2, y - h / 2, w, h, (int)System.nanoTime());}
+        catch(ArrayIndexOutOfBoundsException e){System.out.printf("%d %d %d %d\n", x - w / 2, y - h / 2, w, h);}
     }
    public void run(){//render
         long oneSecond = 1_000_000_000;
@@ -109,14 +130,14 @@ public class Kernel extends Canvas implements Runnable
     }
     
     public void loop(Game game){
-        if(running)
+        if(renderer != null)
             return;
         long previousTime = System.nanoTime();
         long currentTime;
         int updates = 0;
         double accumulator = 0;
         double targetDelta = 1 / 60d;
-        Thread renderer = new Thread(this, "Renderer");
+        renderer = new Thread(this, "Renderer");
         renderer.start();
         while (running) {
             requestFocus();//frame must have focus for input...
@@ -134,7 +155,7 @@ public class Kernel extends Canvas implements Runnable
                 
                 //FTS//
                 updates++;
-                game.update(targetDelta);
+                running = running || game.update(targetDelta);
                 
                 //testRender("" + updates);
                   //  refresh();

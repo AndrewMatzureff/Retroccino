@@ -60,23 +60,21 @@ public class Screen
     public int[] pixels;
     public Font font;
     Sprite clear;
-    public Screen(int w, int h)
+    private Screen(int[] pixels, int w)
     {
         width = w;
-        height = h;
-        pixels = new int[width * height];
-        clear = Sprite.get(SpriteSheet.create("Resources/barn.png", 800, 0), 0);
+        height = pixels.length / w;
+        this.pixels = pixels;
+        //clear = Sprite.get(SpriteSheet.create("Resources/barn.png", 800, 0), 0);
     }
-    public void set(int[] pixels, int width, int height){
-        if(pixels != null){
-            this.pixels = pixels;
-            this.width = width & 0xffff;
-            this.height = height & 0xffff;
-        }
-        
-        
+    public static Screen create(int[] pixels, int w){
+        if(pixels != null && (pixels.length / w) * w == pixels.length)
+            return new Screen(pixels, w);
+        return null;
     }
     public int[] getPixels(){return pixels;}
+    public int getWidth(){return width;}
+    public int getHeight(){return height;}
     public void clear()
     {
         //int c = (int)(System.currentTimeMillis() / 30 % width);

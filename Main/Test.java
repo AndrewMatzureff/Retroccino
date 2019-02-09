@@ -17,7 +17,7 @@ public class Test implements Game
         Test test = new Test();
         test.kernel.loop(test);
     }
-    public void update(double delta){
-        
+    public boolean update(double delta){System.out.println("update");
+        return kernel.getKeyboard().alerted();
     }
 }
