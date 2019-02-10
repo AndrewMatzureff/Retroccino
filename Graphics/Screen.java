@@ -90,7 +90,7 @@ public class Screen
         y = (int)(y - (h * s - h) / 2);
         w = (int)(w * s);
         h = (int)(h * s);
-        if(x >= width || y >= height || x + w < 0 || y + h < 0)
+        if(x >= width || y >= height || x + w < 0 || y + h < 0 || w * h == 0)
         return;
         
         //int oL = x >>> 31;//negatve indicates left of screen; x must be left of screen
@@ -147,7 +147,7 @@ public class Screen
     }
     public void drawRect(int x, int y, int w, int h, int color)
     {
-        if(x >= width || y >= height || x + w < 0 || y + h < 0)
+        if(x >= width || y >= height || x + w < 0 || y + h < 0 || w * h == 0)
         return;
         
         //int oL = x >>> 31;//negatve indicates left of screen; x must be left of screen

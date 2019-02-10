@@ -155,7 +155,8 @@ public class Kernel extends Canvas implements Runnable
                 
                 //FTS//
                 updates++;
-                running = running || game.update(targetDelta);
+                boolean quit = game.update(targetDelta);
+                running ^= quit;
                 
                 //testRender("" + updates);
                   //  refresh();
