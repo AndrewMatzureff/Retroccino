@@ -68,8 +68,11 @@ public class Sprite
             }
         }//*/
     }
-    public void render(Screen screen)
-    {
-        
+    public void noise(int n){
+        for(int i = 0; i < n; i++){
+            for(int j = 0; j < pixels.length; j++){
+                pixels[j] = (pixels[j] ^ (int)(Math.random() * 0x01000000)) | 0xff000000;
+            }
+        }
     }
 }
