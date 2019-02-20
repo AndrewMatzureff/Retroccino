@@ -11,6 +11,8 @@ import javax.swing.JButton;
 import Input.Mouse;
 import Input.Keyboard;
 import Graphics.Screen;
+import Graphics.Sprite;
+import Graphics.Render;
 /**
  * Write a description of class Kernel here.
  * 
@@ -70,10 +72,12 @@ public class Kernel extends Canvas implements Runnable
     }
     public boolean isRunning(){return running;}
     public void setRunning(boolean running){this.running = running;}
+    static Sprite TEST = Sprite.random(128, 10);
     public void refresh(){
         BufferStrategy bs = this.getBufferStrategy();
         Graphics g = bs.getDrawGraphics();
         randomRect();
+        Render.refresh(screen);
         g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
         g.dispose();
         bs.show();
@@ -83,9 +87,13 @@ public class Kernel extends Canvas implements Runnable
         int y = (int)(Math.random() * screen.getHeight());
         int w = (int)(Math.random() * screen.getWidth() * 0.1);
         int h = (int)(Math.random() * screen.getHeight() * 0.1);
-        try{
-        screen.drawRect(x - w / 2, y - h / 2, w, h, (int)System.nanoTime());}
-        catch(ArrayIndexOutOfBoundsException e){System.out.printf("%d %d %d %d\n", x - w / 2, y - h / 2, w, h);}
+        
+        int t = TEST.tilesize;
+        //try{
+        //screen.drawSprite(TEST, x - t / 2, y - t / 2, 0);
+        screen.drawRect(x - w / 2, y - h / 2, w, h, (int)System.nanoTime());//}
+        //catch(ArrayIndexOutOfBoundsException e){System.out.printf("%d %d %d %d\n", x - w / 2, y - h / 2, w, h);}
+        TEST.noise(1);
     }
    public void run(){//render
         long oneSecond = 1_000_000_000;
@@ -156,7 +164,7 @@ public class Kernel extends Canvas implements Runnable
                 //FTS//
                 updates++;
                 boolean quit = game.update(targetDelta);
-                running ^= quit;
+                if(quit){running = false; break;}
                 
                 //testRender("" + updates);
                   //  refresh();

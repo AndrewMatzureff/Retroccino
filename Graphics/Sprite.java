@@ -11,6 +11,13 @@ public class Sprite
     int[] pixels;
     int[] transform;
     public int tilesize;
+    //NOTE: 2/16/19 - plans for height-mapped sprites have been dropped, though not for
+    //obvious reasons (difficulty, complexity, performance being the obvious ones). The
+    //usefulness comes into question when one considers the frequency of graphical
+    //artifacts at target sprite resolutions. Any significant difference in depth between
+    //adjacent pixels would result in noticeable visual gaps, the only remedy being a
+    //drastic increase in sprite resolution allowing smoother, more gradient height maps
+    //to be drawn.
     public static Sprite get(SpriteSheet sheet, int i)//TODO: 2/6/19 - move this method to SpriteSheet
     {
         int tilesize = sheet.tilesize;
@@ -67,6 +74,11 @@ public class Sprite
                 this.transform[i1] = this.pixels[i0];
             }
         }//*/
+    }
+    public static Sprite random(int t, int n){
+        Sprite rs = new Sprite(new int[t * t], t);
+        rs.noise(n);
+        return rs;
     }
     public void noise(int n){
         for(int i = 0; i < n; i++){
