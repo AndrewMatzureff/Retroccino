@@ -19,6 +19,8 @@ public class Entity
     private Sprite sprite;
     public Entity(){//2/16/2019-TODO: make private, enforce factory create() method to obtain pooled object when available
         id = COUNT++;
+        x = (int)(Math.random() * 100000) - 50000;
+        y = (int)(Math.random() * 100000) - 50000;
     }
     public void setX(float n){x = n;}
     public void setY(float n){y = n;}
@@ -37,7 +39,10 @@ public class Entity
             Render.add(this);
             queued = true;
         }
-        x = (x + 1) % 320;
-        y = (y + 1) % 200;
+        int r = (int)(Math.sin(System.nanoTime() * 0.00000000000000000000000001) + 1);
+        //x = (x + 1320 + r) % 2640 - 1320;//(x + 33) % 352 - 32;//96;
+        //y = (y + 1200 + r) % 2400 - 1200;//(y + 33) % 232 - 32;//36;
+        x = (x + r) % 192;//(x + 33) % 352 - 32;//96;
+        y = (y + r) % 72;//(y + 33) % 232 - 32;//36;
     }
 }

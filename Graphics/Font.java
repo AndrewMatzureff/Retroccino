@@ -32,10 +32,10 @@ public class Font//Needs work...
         Sprite glyph;
         int i = 0;
         System.out.println("Glyphs: " + this.glyphs.length);
-        while((glyph = Sprite.get(sprites, i)) != null)
+        /*while((glyph = Sprite.get(sprites, i)) != null)
         {
             glyphs[i++] = glyph;
-        }
+        }*/
     }
     private static char decase(int letter)//lol does this even work? I barely remember writing this...
     {
@@ -94,6 +94,6 @@ public class Font//Needs work...
             }
             i++;
         }
-        return new Font(SpriteSheet.create(filename, tilesize, orientation), offset);
+        return null;//new Font(SpriteSheet.create(filename, tilesize, orientation), offset);
     }
 }

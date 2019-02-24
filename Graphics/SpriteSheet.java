@@ -4,7 +4,6 @@ package Graphics;
 
 import IO.Bitmap;
 import java.io.IOException;
-import Constants.C;
 
 /**
  * Write a description of class SpriteSheet here.
@@ -19,31 +18,22 @@ public class SpriteSheet
     final int[] pixels;
     final int scansize;
     final int tilesize;
-    final int format;
-    public static SpriteSheet create(String file, int tilesize, int format)
+    final boolean format;
+    public static SpriteSheet create(String file, int tilesize, int transparency, int threshold, boolean format)
     {
         try{
-            int[] pixels = Bitmap.read(file);
-            int scansize = Bitmap.getScanSize();
-            if(scansize < tilesize || pixels.length / scansize < tilesize)//dimensions of sprite(s) in sheet cannot exceed either sheet dimension
+            int[][] data = Bitmap.read(file, transparency, threshold);            
+            if(data[0][0] < tilesize || data[1].length / data[0][0] < tilesize)//dimensions of sprite(s) in sheet cannot exceed either sheet dimension
                 return null;
             else
             {
-                int[] clipped = clip(pixels, scansize, tilesize);//clips sheet to area of highest multiple of tilesize along each dimension
-                scansize = pixels[0];//retrieve stored scansize
-                pixels = null;
-                return new SpriteSheet(clipped, scansize, tilesize, format);
+                int[][] clipped = clip(data[1], data[0][0], tilesize);//clips sheet to area of highest multiple of tilesize along each dimension
+                return new SpriteSheet(clipped[1], clipped[0][0], tilesize, format);
             }
         }catch(IOException ioe){return new SpriteSheet(new int[tilesize * tilesize], tilesize, tilesize, format);}
-    }
-    public static SpriteSheet create(String file, int tilesize, int format, int transparency, int threshold)//gotta fix this trash
-    {
-            Bitmap.TRANSPARENCY = transparency;
-            Bitmap.THRESHOLD = threshold;
-            return create(file, tilesize, format);
-    }
-    public int tiles(){return pixels.length / (tilesize * tilesize);}
-    private SpriteSheet(int[] pixels, int scansize, int tilesize, int format)
+   }
+    public int size(){return pixels.length / (tilesize * tilesize);}
+    private SpriteSheet(int[] pixels, int scansize, int tilesize, boolean format)
     {
         this.tilesize = tilesize;
         this.scansize = scansize;
@@ -66,22 +56,58 @@ public class SpriteSheet
      * referenced is in determining the length of the clipped
      * array. Though, this has not been tested.
      */
-    private static int[] clip(int[] pixels, int scansize, int tilesize)
+    private static int[][] clip(int[] pixels, int scansize, int tilesize)
     {
         //By this point pixels should already be guarenteed to be a minimum of tilesize entries long.
         int height = pixels.length / scansize;
-        int clipx = (scansize / tilesize) * tilesize, clipy = (height / tilesize) * tilesize; //number of pixels along each dimension (as a multiple of tilesize)
-        int[] clipped = new int[clipx * clipy];
+        int clipx = (scansize / tilesize) * tilesize;
+        int clipy = (height / tilesize) * tilesize; //number of pixels along each dimension (as a multiple of tilesize)
+        int[][] clipped = new int[][]{{clipx}, new int[clipx * clipy]};
         for(int y = 0; y < clipy; y++)//rectangular clipping algorithm in one line (a few additional lines required for offset clipping)
         {
             int cy = y * clipx;
             int sy = y * scansize;
             for(int x = 0; x < clipx; x++)
             {
-                clipped[x + cy] = pixels[x + sy];
+                clipped[1][x + cy] = pixels[x + sy];
             }
         }
-        pixels[0] = clipx;//pack the new scansize into pixels so it can be retrieved after this method exits
         return clipped;
+    }
+    public Sprite get(int x, int y)
+    {
+        int[] pixels = new int[tilesize * tilesize];
+        //int xsprites, ysprites;//, x = 0, y = 0;
+        //xsprites = scansize / tilesize;
+        //ysprites = this.pixels.length / scansize / tilesize;
+        /*switch(format)
+        {
+            case HORIZONTAL:
+                x = i % xsprites * tilesize;//bilinear pixel component, top-left
+                y = i / xsprites * tilesize;//bilinear pixel component, top-left
+                break;
+            case VERTICAL:
+                x = i / xsprites * tilesize;//bilinear pixel component, top-left
+                y = i % xsprites * tilesize;//bilinear pixel component, top-left
+                break;
+            default:
+                return null;
+        }*/
+        x *= tilesize;
+        y *= tilesize;
+        //System.out.println("Sheet Length: " + this.pixels.length);
+        for(int r = 0; r < tilesize; r++)
+        {
+        	int sheetOffset = (r + y) * scansize;
+        	int spriteOffset = r * tilesize;// + y;
+        	//System.out.println("\n\n\tSource Row: " + sheetOffset + "\tDestination Row: " + spriteOffset);
+        	for(int c = 0; c < tilesize; c++)
+			{
+				//System.out.println("\n\t\tSource Column: " + (c + x) + " = Destination Column: " + (c));
+				int source = this.pixels[sheetOffset + c + x];
+				pixels[spriteOffset + c] = source;
+			}
+		}
+        return Sprite.create(pixels, tilesize);
     }
 }

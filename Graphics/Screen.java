@@ -75,6 +75,13 @@ public class Screen
     public int[] getPixels(){return pixels;}
     public int getWidth(){return width;}
     public int getHeight(){return height;}
+    public void clear(int clear)
+    {
+        for(int i = 0; i < pixels.length; i++)
+            pixels[i] = clear;
+        //pixels[i] = 0xffccaaff + (int)(i * c * 0.01);
+        //drawSprite(clear, -300, -400, MIRROR_Y);
+    }
     public void clear()
     {
         //int c = (int)(System.currentTimeMillis() / 30 % width);
@@ -149,7 +156,6 @@ public class Screen
     {
         if(x >= width || y >= height || x + w < 0 || y + h < 0 || w * h == 0)
         return;
-        
         //int oL = x >>> 31;//negatve indicates left of screen; x must be left of screen
         //int oR = (((width - 1) - (x + w - 1)) >>> 30) & 2;//x + w - 1 must be right of screen
         //int oU = y >>> 29 & 4;
@@ -204,6 +210,7 @@ public class Screen
     }
     public void drawSprite(Sprite sprite, int x, int y, int transform)
     {
+        double start = System.nanoTime();
         int
         screenx = x,//draw position of
         screeny = y,//sprite onscreen
@@ -266,9 +273,9 @@ public class Screen
             spritePixels = sprite.transform;
         }
         //*
-        switch(transform & MIRROR_MASK)//these mirror transforms were Hell in their own right to figure out, but they're so worth the work
-        {
-            case MIRROR_Y:
+        //switch(transform & MIRROR_MASK)//these mirror transforms were Hell in their own right to figure out, but they're so worth the work
+        //{
+            /*case MIRROR_Y:
                 for(int r = 0; r < spriteh; r++)//fixed by ADDING sprite position in offscreen condition since it's a negative offset
                 {
                     int spriter = (r + spritey) * sprite.tilesize;
@@ -308,7 +315,7 @@ public class Screen
                 }
                 break;
             default://*
-            int time = (int)((Math.sin(System.currentTimeMillis() * 0.005) + 1) / 2 * 256);
+            */int time = (int)((Math.sin((System.currentTimeMillis() + x - y) * 0.001) + 1) / 2 * 255);
             //System.out.println("Appearence: " + (255 - (time + 1)) + " = 255 - (" + time + " + 1)");
             //System.out.println("Equivalent:\t" + time);
             time = 0xff - (time + 1);
@@ -343,17 +350,22 @@ public class Screen
                         int lsb = 0x000000ff; //least significant byte; sign correction 
                         int flag = ((spritePixel >> 16) & (spritePixel >> 8) & spritePixel & lsb) + 1;
                         int mask = (flag << 23) >> 31;
-                        if(lsb - (alpha & lsb) <= 0)//completely opaque
+                        
+                        int screenPixel = this.pixels[screenr + c + screenx];
+                        int blend = compose(screenPixel, spritePixel, alpha & 0xff);
+                        //System.out.println("Alpha: " + (alpha & 0xff));
+                        this.pixels[screenr + c + screenx] = blend;//((screenPixel - spritePixel) * alpha) / 255;
+                        /*if(lsb - (alpha & lsb) <= 0)//completely opaque
                         {
                             this.pixels[screenr + c + screenx] &= mask;
                             this.pixels[screenr + c + screenx] |= ~mask & spritePixel;
                         }
                         else//translucent
-                            this.pixels[screenr + c + screenx] &= spritePixel | alpha;
+                            this.pixels[screenr + c + screenx] &= spritePixel | alpha;*/
                     }
                 }//*/
                 return;
-        }//*/
+        //}//*/
         /*
         for(int xi = 0; xi < sprite.tilesize; xi++)
         for(int yi = 0; yi < sprite.tilesize; yi++)
@@ -361,6 +373,32 @@ public class Screen
         this.pixels[xi + x + (yi + y) * width] = spritePixels[xi + yi * sprite.tilesize];//*/
         
         //clipLog(sprite, x, y, screenx, screeny, spritex, spritey, spritew, spriteh);
+        //TOTAL++;
+    }
+    public int composed(int screen, int sprite, double alpha){
+        int cr = (screen & 0xff0000) >> 16, cg = (screen & 0x00ff00) >> 8, cb = screen & 0x0000ff;
+        int pr = (sprite & 0xff0000) >> 16, pg = (sprite & 0x00ff00) >> 8, pb = sprite & 0x0000ff;
+        double r = (double)(cr - pr) * alpha / 255d;
+        double g = (double)(cg - pg) * alpha / 255d;
+        double b = (double)(cb - pb) * alpha / 255d;
+        return ((int)(cr - r) << 16) | ((int)(cg - g) << 8) | (int)(cb - b);
+    }
+    public int composem(int screen, int sprite, float alpha){
+        float inv255 = 0.0039215686274509803921568627451f;
+        int cr = (screen & 0xff0000) >> 16, cg = (screen & 0x00ff00) >> 8, cb = screen & 0x0000ff;
+        int pr = (sprite & 0xff0000) >> 16, pg = (sprite & 0x00ff00) >> 8, pb = sprite & 0x0000ff;
+        int r = (int)((cr - pr) * alpha * inv255);
+        int g = (int)((cg - pg) * alpha * inv255);
+        int b = (int)((cb - pb) * alpha * inv255);
+        return ((cr - r) << 16) | ((cg - g) << 8) | (cb - b);
+    }
+    public int compose(int screen, int sprite, int alpha){
+        int cr = (screen & 0xff0000) >> 16, cg = (screen & 0x00ff00) >> 8, cb = screen & 0x0000ff;
+        int pr = (sprite & 0xff0000) >> 16, pg = (sprite & 0x00ff00) >> 8, pb = sprite & 0x0000ff;
+        int r = (cr - pr) * alpha / 255;
+        int g = (cg - pg) * alpha / 255;
+        int b = (cb - pb) * alpha / 255;
+        return ((cr - r) << 16) | ((cg - g) << 8) | (cb - b);
     }
     public void drawSprite(Sprite sprite, int x, int y, float s, int transform)
     {

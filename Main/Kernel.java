@@ -73,12 +73,18 @@ public class Kernel extends Canvas implements Runnable
     public boolean isRunning(){return running;}
     public void setRunning(boolean running){this.running = running;}
     static Sprite TEST = Sprite.random(128, 10);
+    public static int TOTAL = 0;
+    public static double TIME = 0;
     public void refresh(){
         BufferStrategy bs = this.getBufferStrategy();
         Graphics g = bs.getDrawGraphics();
         randomRect();
+        double start = System.nanoTime();
         Render.refresh(screen);
+        TIME += System.nanoTime() - start;
+        TOTAL++;
         g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
+        screen.clear(0xffdd55ff);
         g.dispose();
         bs.show();
     }
@@ -135,6 +141,8 @@ public class Kernel extends Canvas implements Runnable
             }
         }
         System.out.println("Rendering ended.");
+        
+        IO.Log.append("Double Division: " + (TIME / TOTAL));
     }
     
     public void loop(Game game){
