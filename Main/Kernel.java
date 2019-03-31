@@ -27,8 +27,8 @@ public class Kernel extends Canvas implements Runnable
     private Keyboard keyboard;
     private Mouse mouse;
     private boolean running;
-    BufferedImage image;
-    int[] pixels;
+    //BufferedImage image;
+    //int[] pixels;
     Screen screen;
     Thread renderer;
     public Kernel(String title){
@@ -58,9 +58,7 @@ public class Kernel extends Canvas implements Runnable
         return keyboard;
     }
     public void init(int w, int h){
-        image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-        pixels = ((DataBufferInt)image.getRaster().getDataBuffer()).getData();
-        screen = Screen.create(pixels, w);
+        screen = Screen.create(w, h);
         if(screen == null)
             running = false;
     }
@@ -75,6 +73,7 @@ public class Kernel extends Canvas implements Runnable
     static Sprite TEST = Sprite.random(128, 10);
     public static int TOTAL = 0;
     public static double TIME = 0;
+    public static int frames = 0;
     public void refresh(){
         BufferStrategy bs = this.getBufferStrategy();
         Graphics g = bs.getDrawGraphics();
@@ -83,10 +82,17 @@ public class Kernel extends Canvas implements Runnable
         Render.refresh(screen);
         TIME += System.nanoTime() - start;
         TOTAL++;
-        g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
-        screen.clear(0xffdd55ff);
+        g.drawImage(screen.refresh(Screen.BLEND | 0xffffffffL & frames | (frames << 24 & 0xff000000)), 0, 0, getWidth(), getHeight(), null);
+        //screen.clear(0x10ff0000);//0x00ffffff & frames);
+        nextColor(5);
         g.dispose();
         bs.show();
+    }
+    public void nextColor(double step){
+        int r = (frames & 0x00ff0000) >> 16;
+        int g = (frames & 0x0000ff00) >> 8;
+        int b = frames & 0x000000ff;
+        frames = ((int)(r + Math.random() * step) << 16) | ((int)(g + Math.random() * step) << 8) | ((int)(b + Math.random() * step));
     }
     public void randomRect(){
         int x = (int)(Math.random() * screen.getWidth());
@@ -119,20 +125,17 @@ public class Kernel extends Canvas implements Runnable
             long frameTime = currentTime - previousTime;
             previousTime = currentTime;
             accumulator += frameTime * SECONDS;
-            //FTS//
             do{
-                while (accumulator >= targetDelta){
-                    //FTS//
+                //while (accumulator >= targetDelta){
                     accumulator -= targetDelta;
                     do
-                        refresh();
+                       refresh();
                     while(bs.contentsRestored());
-                    //FTS//
                     updates++;
     
                 
-                    refresh();
-                }
+                    //refresh();
+                //}
             }while(bs.contentsLost());
             if(System.nanoTime() - startTimer >= oneSecond){
                 //System.out.println(updates + " frames in " + ((System.nanoTime() - startTimer) * seconds) + " seconds...");
@@ -171,6 +174,7 @@ public class Kernel extends Canvas implements Runnable
                 
                 //FTS//
                 updates++;
+                Input.Command.update((float)targetDelta);
                 boolean quit = game.update(targetDelta);
                 if(quit){running = false; break;}
                 

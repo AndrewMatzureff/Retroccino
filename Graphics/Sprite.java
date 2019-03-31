@@ -5,11 +5,13 @@ package Graphics;
  * @author (Andrew Matzureff) 
  * @version (11/17/2016)
  */
-public class Sprite
+public final class Sprite
 {
     int[] pixels;
-    int[] transform;
-    public int tilesize;
+    int[] ptransform;
+    byte[] height;
+    byte[] htransform;
+    public final int tilesize;
     //NOTE: 2/16/19 - plans for height-mapped sprites have been dropped, though not for
     //obvious reasons (difficulty, complexity, performance being the obvious ones). The
     //usefulness comes into question when one considers the frequency of graphical
@@ -18,12 +20,16 @@ public class Sprite
     //drastic increase in sprite resolution allowing smoother, more gradient height maps
     //to be drawn.
     //NOTE: 2/21/2019 - height maps can still be! Just no per pixel parallax...
-    private Sprite(int[] pixels, int tilesize)
+    private Sprite(int[] pixels, byte[] height, int tilesize)
     {
         this.pixels = new int[pixels.length];
+        this.height = new byte[pixels.length];
         System.arraycopy(pixels, 0, this.pixels, 0, pixels.length);
+        if(height != null)
+            System.arraycopy(height, 0, this.height, 0, pixels.length);
         this.tilesize = tilesize;
-        this.transform = new int[pixels.length];
+        this.ptransform = new int[pixels.length];
+        this.htransform = new byte[pixels.length];
         //*
          for(int r = 0; r < this.tilesize; r++)
         {
@@ -32,19 +38,23 @@ public class Sprite
                 int i0 = c + r * this.tilesize;
                 int i1 = r + c * this.tilesize;
                 //int temp = this.pixels[i0];
-                this.transform[i0] = this.pixels[i1];
+                this.ptransform[i0] = this.pixels[i1];
                 //this.pixels[i1] = temp;
-                this.transform[i1] = this.pixels[i0];
+                this.ptransform[i1] = this.pixels[i0];
+                
+                this.htransform[i0] = this.height[i1];
+                //this.pixels[i1] = temp;
+                this.htransform[i1] = this.height[i0];
             }
         }//*/
     }
     public static Sprite create(int[] pixels, int tilesize){
         if(pixels != null && pixels.length == tilesize * tilesize)
-            return new Sprite(pixels, tilesize);
+            return new Sprite(pixels, null, tilesize);
         return null;
     }
     public static Sprite random(int t, int n){
-        Sprite rs = new Sprite(new int[t * t], t);
+        Sprite rs = new Sprite(new int[t * t], null, t);
         rs.noise(n);
         return rs;
     }

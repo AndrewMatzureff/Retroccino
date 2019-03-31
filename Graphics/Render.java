@@ -48,7 +48,8 @@ public class Render
             float x = i.entity.getX();
             float y = i.entity.getY();
             int t = i.entity.getTransform();
-            screen.drawSprite(s, (int)x, (int)y, t);
+            double scale = 1;//5;//Math.sin(System.currentTimeMillis() * 0.001) + 1.25;
+            screen.drawSprite(s, (int)x, (int)y, t, (float)scale);
             if(i.prev != null && i.prev.entity.getZ() > i.entity.getZ()){
                 filter(i);
             }
