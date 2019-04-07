@@ -37,7 +37,6 @@ public class Screen
     public static final int SIGN_INT = 31;
     
     //Transform
-    public static final int MIRROR_XY_MASK = 3;
     public static final int MIRROR_MASK = 3;
     public static final int ROTATE_MASK = 4;
     public static final int REFLECTION_MASK = 5;
@@ -45,6 +44,9 @@ public class Screen
     public static final int MIRROR_Y = 1;
     public static final int MIRROR_X = 2;
     public static final int MIRROR_XY = 3;
+    //
+    public static final int HORIZONTAL = 1;
+    public static final int VERTICAL = 1;
     
     //Clockwise & Anti-Clockwise
     public static final int
@@ -57,12 +59,35 @@ public class Screen
     AC_180 = 2,
     AC_270 = 6;
     
+    //Sequentially Ordered Transform Arrays for convenience
+    public static final int[][] ROTATE = new int[][]{
+        {0, 4, 3, 7},
+        {1, 6, 2, 5},
+        {2, 5, 1, 6},
+        {3, 7, 0, 4},
+        {4, 3, 7, 0},
+        {5, 1, 6, 2},
+        {6, 2, 5, 1},
+        {7, 0, 4, 3}
+    };
+    public static final int[][] ANTICLOCKWISE = new int[][]{
+        {0, 7, 3, 4},
+        {1, 5, 2, 6},
+        {2, 6, 1, 5},
+        {3, 4, 0, 7},
+        {4, 0, 7, 3},
+        {5, 2, 6, 1},
+        {6, 1, 5, 2},
+        {7, 3, 4, 0}
+    };
+    
     public static final long BLEND = 0x1_00000000L;
     public int width, height;
     private int[] read;//final
     private int[] write;//wip
     private BufferedImage preblend;
     private BufferedImage postblend;
+    private int[] flip;
     public Font font;
     Sprite clear;
     static int ALPHAP = 200;
@@ -74,7 +99,8 @@ public class Screen
         postblend = post;
         write = ((DataBufferInt)pre.getRaster().getDataBuffer()).getData();
         read = ((DataBufferInt)post.getRaster().getDataBuffer()).getData();
-        setOpacity(200);
+        flip = new int[2];
+        setOpacity(100);
         //clear = Sprite.get(SpriteSheet.create("Resources/barn.png", 800, 0), 0);
     }
     public static Screen create(int w, int h){
@@ -512,15 +538,31 @@ public class Screen
         int prepass = compose(screen, sprite, alphap);
         return compose(screen, prepass, alphac);
     }
+    public int getTransform(int angle, int startFrame){
+        int i = (int)(angle / 90) % 4;
+        return ROTATE[startFrame & 0x7][(i + (i >> 31 & 4))];
+    }
+    public int getTransform(double angle, int startFrame){
+        int i = (int)(angle / (Math.PI * 2) * 4) % 4;
+        return ROTATE[startFrame & 0x7][(i + (i >> 31 & 4))];
+    }
     public void drawSprite(Sprite sprite, int x, int y, int transform, float s)
     {
+        int degrees = (int)((System.currentTimeMillis() & 0x7fffffff) / 1.0125);
+        double radians = degrees * Math.PI / 180d;
+        transform = getTransform(degrees, 0);
+        //System.out.printf("\n%6d : %6f\n      %3d\n", degrees, radians, transform);
+        /*if(true){
+            drawSprite(sprite, x, y, transform);
+            return;
+        }*/
         //x = (int)(x - (w * s - w) / 2);
         //y = (int)(y - (h * s - h) / 2);
         //w = (int)(w * s);
         //h = (int)(h * s);
         
-            s = (float)((Math.sin(System.currentTimeMillis() * 0.0005) * 0.999 + 1));
-        float tilescale = (int)(sprite.tilesize * s);
+            s = (float)((Math.sin(System.currentTimeMillis() * 0.005) * 0.5 + 1));
+        int tilescale = (int)(sprite.tilesize * s);
         float tiledif = tilescale - sprite.tilesize;
         int tilesize = sprite.tilesize;
         int
@@ -528,8 +570,8 @@ public class Screen
         screeny = (int)(y - tiledif / 2),//sprite onscreen
         spritex = 0,//clip offset in sprite
         spritey = 0,//to start drawing from
-        spritew = (int)(tilescale),
-        spriteh = (int)(tilescale);//maybe these should eventually be the regular tilesize since the sreen coordinate will get scaled while drawing
+        spritew = (tilescale),
+        spriteh = (tilescale);//maybe these should eventually be the regular tilesize since the sreen coordinate will get scaled while drawing
         int[] spritePixels = sprite.pixels;
         byte[] spriteHeight = sprite.height;
         if(screenx < 0)
@@ -581,12 +623,13 @@ public class Screen
         }
         
      if((transform & ROTATE_MASK) != 0)
-        {//NOTE: 90 degree rotation to the right must also include a horizontal mirror transform for the rotation to be correct.
+        {//NOTE: 90 degree rotation to the right must also include a horizontal mirror transform for the rotation to be correct (presumably due to the transpose diagonal going from top left to bottom right).
             //Because of this implicit reflection the MIRROR_Y flag must be inverted while the MIRROR_X remains unchanged.
             //100    101    110    111
             //101    101    101    101
             //001    000    011    010
             transform ^= REFLECTION_MASK;
+            //System.out.println("flip: " + (transform & MIRROR_Y));
             spritePixels = sprite.ptransform;
             spriteHeight = sprite.htransform;
         }
@@ -633,53 +676,63 @@ public class Screen
                 }
                 break;
             default:*///*
-            int time = (int)((Math.sin(System.currentTimeMillis() * 0.005) + 1) / 2 * 256);
+            //float pi2 = (float)Math.PI * 2;
+            //(int)((Math.sin(System.currentTimeMillis() * 0.005)) * 5);
             //System.out.println("Appearence: " + (255 - (time + 1)) + " = 255 - (" + time + " + 1)");
             //System.out.println("Equivalent:\t" + time);
-            time = 0xff - (time + 1);
+            //time = 0xff - (time + 1);
+                    //long time = System.currentTimeMillis();
+                
+                    /* I know the naming conventions are a bit difficult to follow so I'll provide some context: the local variables
+                     * (...x..., ...y...) refer to coordinates existing on the screen or in the sprite. The mirror flags refer to
+                     * the axis of reflection. A mirror parallel to the Y axis produces inverted X ordinates and vice versa.
+                     */
+                    int xflip = -(transform & MIRROR_Y); //-1 indicates a mirror transform along the y axis (horizontal flip)
+                    int yflip = -(transform & MIRROR_X) >> 1; //-1 indicates a mirror transform along the x axis (vertical flip)
                 for(int r = 0; r < spriteh; r++)//fixed by ADDING sprite position in offscreen condition since it's a negative offset
                 {
-                    int spriter;// = (r + spritey) * sprite.tilesize;
-                    int screenr;// = (r + screeny) * width;
-                    switch(transform & MIRROR_MASK)
+                    //int spriter;// = (r + spritey) * sprite.tilesize;
+                    int screenr = (r + screeny) * width;
+                    
+                    int vrow = r + spritey;
+                    int vryflip = tilescale - 1 - vrow;
+                    
+                    int spriter = (int)(((vrow & ~yflip) | (vryflip & yflip)) / s) * tilesize;
+                    //4/4/19- NOTE: perhaps at a way later date, explore the idea of fx channels for a post processing pipeline.
+                    //double freq = (time + r * 100d) * 0.0025;
+                    //double distortions = (Math.sin(freq) * 5);
+                    //double distortionc = (Math.cos(freq) * 5);
+                    //int distortion = (int)(distortions + distortionc);
+                    /*switch(transform & MIRROR_MASK)
                     {
                         case MIRROR_Y:
-                            spriter = (int)((r + spritey) / s * sprite.tilesize);
-                            screenr = (r + screeny) * width;
+                            spriter = ((int)((r + spritey) / s) * tilesize);
                             break;
                         case MIRROR_X:
-                            spriter = (sprite.tilesize - 1 - (r + spritey)) * sprite.tilesize;
-                            screenr = (r + screeny) * width;
+                            spriter = (int)((tilesize - 1 - (r + spritey)) / s) * tilesize;
                             break;
                         case MIRROR_XY:
-                            spriter = (sprite.tilesize - 1 - (r + spritey)) * sprite.tilesize;
-                            screenr = (r + screeny) * width;
+                            spriter = (int)((tilesize - 1 - (r + spritey)) / s) * tilesize;
                             break;
                         default:
-                            //spriter = (int)(((r + spritey) / (tilescale - 1) ) * (tilesize - 1));
-                             //System.out.println("((" + r + " + " + spritey + " = " + (r + spritey) + ") / " + s + " = " + ((r + spritey) / s) + ") * " + tilesize + " =\t" + (((r + spritey) / s) * tilesize));
                             spriter = ((int)((r + spritey) / s) * tilesize);
-                            screenr = (r + screeny) * width;
                             break;
-                    }
+                    }*/
                     for(int c = 0; c < spritew; c++)
                     {
-                        int alpha = time << 24;
-                        alpha = 255;//(alpha >>> 8) | (alpha >>> 16) | (alpha >>> 24);
-                        
-                        int spriteIndex = (int)(spriter + (((c + spritex) / s)));
-                        //if(spriteIndex >= tilesize * tilesize){
-                             //System.out.println("spriteIndex(spriter: " + spriter + ", spritec: " + (int)((spritex + c) / s) + "): " + spriteIndex + "\terror: " + (1 + spriteIndex - tilesize * tilesize));
-                        //     continue;}
+                        int vcolumn = c + spritex;
+                        int vcxflip = tilescale - 1 - vcolumn;
+                        /*if(r == 0){
+                            if(c == 0)
+                                System.out.println();
+                            System.out.printf("\n   %3d\n%3d   %3d\n\n", xflip, (vcolumn & ~xflip), (vcxflip & xflip));
+                        }*/
+                        int spriteIndex = (int)(spriter + (((vcolumn & ~xflip) | (vcxflip & xflip)) / s));
                         int spritePixel = spritePixels[spriteIndex];
-                        
                         int screenIndex = screenr + c + screenx;
                         int screenPixel = write[screenIndex];
-                        
-                        
                         //NOTE: 3/22/19- add an alpha channel override scalar to the Sprite class that will be used here to scale the intensity of the instance persistent Sprite alpha values
                         int blend = compose(screenPixel, spritePixel, ALPHAP);
-                        //System.out.println("Alpha: " + (alpha & 0xff));
                         int depth = 0xff000000;
                         //gotta continue this
                         //if((depth < (screenPixel & 0xff000000) || (screenPixel & 0xff000000) == 0))//depth buffer check
@@ -688,6 +741,7 @@ public class Screen
                         //int sign = 
                     }
                 }//*/
+                ALPHAP = 200;
                 return;
         //}//*/
         /*

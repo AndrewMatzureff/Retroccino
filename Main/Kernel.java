@@ -82,7 +82,7 @@ public class Kernel extends Canvas implements Runnable
         Render.refresh(screen);
         TIME += System.nanoTime() - start;
         TOTAL++;
-        g.drawImage(screen.refresh(Screen.BLEND | 0xffffffffL & frames | (frames << 24 & 0xff000000)), 0, 0, getWidth(), getHeight(), null);
+        g.drawImage(screen.refresh(Screen.BLEND | 0xffffffffL & frames | (0xff << 24 & 0xff000000)), 0, 0, getWidth(), getHeight(), null);
         //screen.clear(0x10ff0000);//0x00ffffff & frames);
         nextColor(5);
         g.dispose();

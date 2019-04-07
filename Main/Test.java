@@ -26,7 +26,7 @@ public class Test implements Game
         e = new ArrayList<Entity>();
         Command u = new Command(){
             protected void down(float delta){
-                Behavior.Entity.Y -= delta;
+                Behavior.Entity.Y = delta;
             }
         };
         Command d = new Command(){
@@ -62,8 +62,11 @@ public class Test implements Game
         //test.b.setSprite(Sprite.random(64, 1));
         test.ss = SpriteSheet.create("Resources" + IO.Text.FILE_SEPARATOR + "mono32pad.bmp", 32, -1, 0, true);
         //test.a.setSprite(test.ss.get(0, 0));
-        for(int i = 0; i < 1; i++){
-            test.e.add(new Entity(100, 100));
+        int entities = 1000;
+        for(int i = 0; i < entities; i++){
+            int rx = (int)(Math.random() * 320) - 160;
+            int ry = (int)(Math.random() * 200) - 100;
+            test.e.add(new Entity(160 + rx, 100 + ry));
             test.e.get(i).setSprite(test.ss.get(i % 13, i % 2));
         }
         //test.b.setSprite(test.ss.get(1, 1));

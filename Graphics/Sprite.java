@@ -31,12 +31,12 @@ public final class Sprite
         this.ptransform = new int[pixels.length];
         this.htransform = new byte[pixels.length];
         //*
-         for(int r = 0; r < this.tilesize; r++)
+         for(int r = 0; r < tilesize; r++)
         {
-            for(int c = r; c < this.tilesize; c++)
+            for(int c = r; c < tilesize; c++)
             {
-                int i0 = c + r * this.tilesize;
-                int i1 = r + c * this.tilesize;
+                int i0 = c + r * tilesize;
+                int i1 = r + c * tilesize;
                 //int temp = this.pixels[i0];
                 this.ptransform[i0] = this.pixels[i1];
                 //this.pixels[i1] = temp;
